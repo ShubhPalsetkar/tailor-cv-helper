@@ -4,83 +4,142 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tailor · CV helper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#18212b; --soft:#5d6b78; --line:#e1e5ea; --bg:#f4f2ee; --card:#fff; --brand:#2b4c7e;
-          --good:#1f8a4c; --warn:#c77d00; --bad:#c8372d; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:var(--bg); line-height:1.45; }
-  header { max-width:1280px; margin:0 auto; padding:26px 20px 6px; }
-  .tag { display:inline-block; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--brand);
-         background:#e3eaf5; padding:4px 10px; border-radius:99px; }
-  h1 { font-size:clamp(26px,4vw,40px); margin:10px 0 4px; letter-spacing:-.02em; }
-  header p { color:var(--soft); margin:0; max-width:680px; font-size:16px; }
-  main { max-width:1280px; margin:0 auto; padding:16px 20px 50px; display:grid; grid-template-columns: 470px 1fr; gap:20px; align-items:start; }
+  /* Palette: forest night with cream text, leaf for good news, rust for gaps */
+  :root {
+    --night:#141D19; --moss:#1C2823; --moss-2:#22302A; --line:#33463D; --line-soft:#283830;
+    --cream:#F2EBDD; --sage:#9CB0A4; --leaf:#93B96F; --rust:#C9663F; --amber:#D9A24B;
+    --ink:var(--cream); --soft:var(--sage); --good:var(--leaf); --warn:var(--amber); --bad:var(--rust); --brand:var(--leaf);
+    --serif:"Instrument Serif","Iowan Old Style",Georgia,serif;
+    --sans:"Inter Tight",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html { background:var(--night); }
+  body { margin:0; font-family:var(--sans); color:var(--cream); background:var(--night); line-height:1.5; font-size:15px; }
+  a { color:var(--leaf); }
+  :focus-visible { outline:2px solid var(--leaf); outline-offset:2px; }
+
+  /* The cube field behind everything. It tilts towards the cursor. */
+  #field { position:fixed; inset:0; z-index:0; perspective:1400px; overflow:hidden; pointer-events:none; }
+  #tiles { position:absolute; left:-12%; top:-12%; width:124%; height:124%; transform-style:preserve-3d; will-change:transform; }
+  #glow { position:absolute; width:900px; height:900px; margin:-450px 0 0 -450px; border-radius:50%;
+          background:radial-gradient(circle, rgba(147,185,111,.20) 0%, rgba(147,185,111,.06) 35%, transparent 65%);
+          left:22%; top:28%; will-change:transform; }
+  #shade { position:absolute; inset:0; background:
+           linear-gradient(180deg, rgba(20,29,25,.10) 0%, rgba(20,29,25,.55) 55%, rgba(20,29,25,.92) 100%),
+           linear-gradient(90deg, rgba(20,29,25,0) 40%, rgba(20,29,25,.55) 100%); }
+  .page { position:relative; z-index:1; }
+
+  /* Top bar */
+  .bar-top { max-width:1280px; margin:0 auto; padding:22px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:28px; color:var(--cream); letter-spacing:-.01em; }
+  .brand svg { flex:none; }
+  .bar-top .hint { max-width:360px; text-align:right; }
+
+  /* Hero */
+  header { max-width:1280px; margin:0 auto; padding:48px 24px 36px; }
+  .where { font-size:14px; color:var(--sage); display:flex; align-items:center; gap:8px; margin:0 0 18px; }
+  .where i { width:7px; height:7px; border-radius:50%; background:var(--rust); display:inline-block; }
+  h1 { font-family:var(--serif); font-weight:400; font-size:clamp(46px,8.2vw,112px); line-height:.94; letter-spacing:-.025em; margin:0; max-width:16ch; }
+  h1 .second { display:block; color:var(--rust); font-style:italic; }
+  header p { color:#D9D3C6; max-width:56ch; font-size:18px; line-height:1.6; margin:26px 0 0; }
+
+  main { max-width:1280px; margin:0 auto; padding:12px 24px 60px; display:grid; grid-template-columns: 470px 1fr; gap:22px; align-items:start; }
   @media (max-width:980px){ main { grid-template-columns:1fr; } }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
-  .card h2 { font-size:17px; margin:0 0 10px; }
-  .num { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--brand); color:#fff; font-size:13px; margin-right:6px; }
-  .hint { font-size:13px; color:var(--soft); }
-  .drop { border:2px dashed #b8c3cf; border-radius:12px; padding:18px; text-align:center; cursor:pointer; color:var(--soft); }
-  .drop:hover,.drop.over { border-color:var(--brand); background:#f2f6fb; color:var(--brand); }
-  .drop b { display:block; color:var(--ink); }
-  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-  .row > * { flex:1 1 140px; }
-  label { display:block; font-size:12.5px; color:var(--soft); margin-top:8px; }
-  input[type=text], textarea { width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:14px; margin-top:3px; background:#fff; }
-  textarea { resize:vertical; min-height:70px; }
-  #job { min-height:190px; }
-  #form { margin-top:6px; }
-  @media (min-width:981px){ #form { max-height:620px; overflow:auto; padding-right:4px; } }
   main > div { min-width:0; }   /* stops wide content pushing the page sideways */
-  details { border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-top:8px; }
-  summary { cursor:pointer; font-weight:600; font-size:14px; padding:4px 0; }
-  .entry { border:1px solid var(--line); background:#fafbfc; border-radius:10px; padding:4px 10px 10px; margin-top:10px; position:relative; }
-  .x { position:absolute; right:8px; top:6px; background:none; border:0; color:var(--bad); cursor:pointer; font-size:13px; }
-  .btn { background:var(--brand); color:#fff; border:0; border-radius:9px; padding:11px 16px; font:inherit; font-weight:600; cursor:pointer; }
-  .btn.light { background:#fff; color:var(--ink); border:1px solid var(--line); font-weight:500; }
-  .btn.small { padding:6px 10px; font-size:13px; font-weight:500; }
+
+  /* Panels: dark glass over the cube field */
+  .card { background:rgba(28,40,35,.78); border:1px solid var(--line-soft); border-radius:20px; padding:22px; margin-bottom:18px;
+          backdrop-filter:blur(14px) saturate(120%); -webkit-backdrop-filter:blur(14px) saturate(120%); }
+  .card h2 { font-family:var(--serif); font-weight:400; font-size:30px; margin:0 0 14px; letter-spacing:-.01em; display:flex; align-items:baseline; gap:12px; }
+  .num { font-family:var(--serif); font-style:italic; color:var(--rust); font-size:30px; }
+  .hint { font-size:13.5px; color:var(--sage); }
+  .drop { border:1px dashed #4A6357; border-radius:16px; padding:22px; text-align:center; cursor:pointer; color:var(--sage);
+          background:rgba(147,185,111,.04); transition:background .2s, border-color .2s; }
+  .drop:hover,.drop.over { border-color:var(--leaf); background:rgba(147,185,111,.10); color:var(--cream); }
+  .drop b { display:block; color:var(--cream); font-family:var(--serif); font-weight:400; font-size:24px; margin-bottom:2px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .row > * { flex:1 1 140px; }
+  label { display:block; font-size:13px; color:var(--sage); margin-top:10px; }
+  input[type=text], textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; font-size:14.5px;
+          margin-top:4px; background:rgba(14,21,18,.55); color:var(--cream); transition:border-color .15s; }
+  input[type=text]:focus, textarea:focus { border-color:var(--leaf); outline:none; box-shadow:0 0 0 3px rgba(147,185,111,.18); }
+  textarea { resize:vertical; min-height:72px; line-height:1.5; }
+  ::placeholder { color:#6F8378; }
+  #job { min-height:200px; }
+  #form { margin-top:8px; }
+  @media (min-width:981px){ #form { max-height:620px; overflow:auto; padding-right:6px; } }
+  #form::-webkit-scrollbar { width:8px; } #form::-webkit-scrollbar-thumb { background:var(--line); border-radius:8px; }
+  details { border-top:1px solid var(--line-soft); padding:10px 2px 12px; }
+  details:first-child { border-top:0; }
+  summary { cursor:pointer; font-family:var(--serif); font-size:21px; padding:2px 0; list-style:none; display:flex; justify-content:space-between; align-items:center; }
+  summary::-webkit-details-marker { display:none; }
+  summary::after { content:"+"; font-family:var(--sans); color:var(--sage); font-size:20px; }
+  details[open] > summary::after { content:"−"; }
+  .entry { border:1px solid var(--line-soft); background:rgba(14,21,18,.35); border-radius:14px; padding:6px 14px 14px; margin-top:12px; position:relative; }
+  .x { position:absolute; right:10px; top:8px; background:none; border:0; color:var(--rust); cursor:pointer; font:inherit; font-size:13px; }
+  .btn { background:var(--cream); color:#17211C; border:0; border-radius:999px; padding:13px 22px; font:inherit; font-weight:600; cursor:pointer;
+         transition:transform .15s, background .15s; }
+  .btn:hover { background:#FFF8EA; }
+  .btn:active { transform:translateY(1px); }
+  .btn.light { background:transparent; color:var(--cream); border:1px solid #4A6357; font-weight:500; }
+  .btn.light:hover { border-color:var(--cream); }
+  .btn.small { padding:8px 14px; font-size:13.5px; }
   .btn:disabled { opacity:.5; cursor:not-allowed; }
-  .actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-  .note { background:#fff6df; border:1px solid #efd58c; border-radius:10px; padding:9px 12px; font-size:13.5px; margin:10px 0; }
-  .note.err { background:#fdecea; border-color:#f2b8b2; }
-  .tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
-  .tabs button { background:#fff; border:1px solid var(--line); border-radius:99px; padding:8px 16px; font:inherit; font-size:14px; cursor:pointer; }
-  .tabs button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
-  .empty { text-align:center; color:var(--soft); padding:50px 10px; }
-  .empty b { display:block; color:var(--ink); font-size:17px; margin-bottom:4px; }
-  .scorebox { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
-  .ring { width:130px; height:130px; border-radius:50%; display:grid; place-items:center; flex:none; }
-  .ring div { width:100px; height:100px; border-radius:50%; background:#fff; display:grid; place-items:center; text-align:center; }
-  .ring b { font-size:32px; display:block; line-height:1; } .ring span { font-size:12px; color:var(--soft); }
-  .verdict { font-size:22px; font-weight:700; }
-  .bar { margin:12px 0; }
-  .bar .top { display:flex; justify-content:space-between; font-size:14px; }
-  .bar .track { height:9px; background:#edf0f3; border-radius:9px; overflow:hidden; margin-top:4px; }
-  .bar .fill { height:100%; background:var(--brand); border-radius:9px; }
-  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
-  .chip { font-size:12.5px; padding:3px 9px; border-radius:99px; border:1px solid; }
-  .chip.yes { color:var(--good); border-color:#b5e0c6; background:#eef9f2; }
-  .chip.no { color:var(--bad); border-color:#f1c0bb; background:#fdf1f0; }
-  .chip.maybe { color:var(--warn); border-color:#f1d9a6; background:#fff8e9; }
-  .gap { border-left:4px solid; padding:10px 12px; border-radius:6px; background:#fafafa; margin:8px 0; font-size:14px; }
-  .gap.must { border-color:var(--bad); } .gap.nice { border-color:var(--warn); } .gap.show { border-color:var(--brand); }
-  .gap b { display:block; }
-  h3 { font-size:15px; margin:18px 0 6px; }
-  ul.plain { padding-left:18px; margin:6px 0; font-size:14px; } ul.plain li { margin:4px 0; }
+  .actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .note { background:rgba(217,162,75,.12); border:1px solid rgba(217,162,75,.35); color:#F1DDB8; border-radius:12px; padding:11px 14px; font-size:14px; margin:12px 0; }
+  .note.err { background:rgba(201,102,63,.14); border-color:rgba(201,102,63,.45); color:#F4C9B6; }
+  .note b { color:var(--cream); }
+
+  /* Results */
+  .tabs { display:flex; gap:4px; margin-bottom:14px; padding:4px; background:rgba(14,21,18,.6); border:1px solid var(--line-soft); border-radius:999px; width:max-content; max-width:100%; }
+  .tabs button { background:none; border:0; color:var(--sage); border-radius:999px; padding:9px 18px; font:inherit; font-size:14.5px; cursor:pointer; }
+  .tabs button.on { background:var(--cream); color:#17211C; font-weight:600; }
+  .empty { text-align:center; color:var(--sage); padding:70px 12px; }
+  .empty b { display:block; color:var(--cream); font-family:var(--serif); font-weight:400; font-size:30px; margin-bottom:6px; }
+  .scorebox { display:flex; gap:26px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+  .ring { width:150px; height:150px; border-radius:50%; display:grid; place-items:center; flex:none; }
+  .ring div { width:134px; height:134px; border-radius:50%; background:var(--moss); display:grid; place-items:center; text-align:center; }
+  .ring b { font-family:var(--serif); font-weight:400; font-size:60px; display:block; line-height:.9; color:var(--cream); }
+  .ring span { font-size:12.5px; color:var(--sage); }
+  .verdict { font-family:var(--serif); font-size:36px; line-height:1.05; }
+  .scorebox p { margin:6px 0 8px; color:#D9D3C6; }
+  .bar { padding:14px 0; border-top:1px solid var(--line-soft); }
+  .bar .top { display:flex; justify-content:space-between; font-size:15px; }
+  .bar .top b { font-weight:500; color:var(--sage); }
+  .bar .track { height:6px; background:var(--line-soft); border-radius:6px; overflow:hidden; margin-top:8px; }
+  .bar .fill { height:100%; background:var(--leaf); border-radius:6px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .chip { font-size:13px; padding:4px 11px; border-radius:999px; border:1px solid; }
+  .chip.yes { color:#C9E0B2; border-color:rgba(147,185,111,.45); background:rgba(147,185,111,.10); }
+  .chip.no { color:#F0B9A2; border-color:rgba(201,102,63,.5); background:rgba(201,102,63,.10); }
+  .chip.maybe { color:#EBCB91; border-color:rgba(217,162,75,.45); background:rgba(217,162,75,.08); }
+  .gap { border-left:3px solid; padding:12px 14px; border-radius:4px 12px 12px 4px; background:rgba(14,21,18,.45); margin:8px 0; font-size:14.5px; color:#D9D3C6; }
+  .gap.must { border-color:var(--rust); } .gap.nice { border-color:var(--amber); } .gap.show { border-color:var(--leaf); }
+  .gap b { display:block; color:var(--cream); font-weight:600; margin-bottom:2px; }
+  h3 { font-family:var(--serif); font-weight:400; font-size:24px; margin:26px 0 8px; }
+  ul.plain { padding-left:18px; margin:6px 0; font-size:14.5px; } ul.plain li { margin:5px 0; }
   .styles { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
   @media (max-width:640px){ .styles { grid-template-columns:repeat(2,1fr); } }
-  .style { border:2px solid var(--line); border-radius:10px; padding:9px; cursor:pointer; background:#fff; text-align:left; font:inherit; }
-  .style.on { border-color:var(--brand); background:#f2f6fb; }
-  .style b { display:block; font-size:14px; } .style span { font-size:12px; color:var(--soft); }
-  .swatches { display:flex; gap:8px; margin-top:8px; align-items:center; }
-  .sw { width:26px; height:26px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; }
-  .sw.on { box-shadow:0 0 0 2px var(--ink); }
-  .compare { display:flex; gap:14px; align-items:center; font-size:15px; margin:4px 0 8px; flex-wrap:wrap; }
-  .compare b { font-size:22px; }
-  .toggle { display:inline-flex; border:1px solid var(--line); border-radius:99px; overflow:hidden; }
-  .toggle button { border:0; background:#fff; padding:6px 12px; font:inherit; font-size:13px; cursor:pointer; }
-  .toggle button.on { background:var(--ink); color:#fff; }
-  .paper { background:#e9ecef; border-radius:12px; padding:18px; margin-top:12px; overflow:auto; }
+  .style { border:1px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; background:rgba(14,21,18,.4); text-align:left; font:inherit; color:var(--cream); }
+  .style:hover { border-color:#5B7568; }
+  .style.on { border-color:var(--leaf); background:rgba(147,185,111,.12); }
+  .style b { display:block; font-family:var(--serif); font-weight:400; font-size:21px; }
+  .style span { font-size:12.5px; color:var(--sage); }
+  .swatches { display:flex; gap:10px; margin-top:14px; align-items:center; flex-wrap:wrap; }
+  .sw { width:28px; height:28px; border-radius:50%; border:2px solid var(--moss); box-shadow:0 0 0 1px var(--line); cursor:pointer; }
+  .sw.on { box-shadow:0 0 0 2px var(--cream); }
+  .compare { display:flex; gap:16px; align-items:center; font-size:15px; margin:0 0 12px; flex-wrap:wrap; color:var(--sage); }
+  .compare b { font-family:var(--serif); font-weight:400; font-size:34px; line-height:1; }
+  .toggle { display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; padding:3px; background:rgba(14,21,18,.5); }
+  .toggle button { border:0; background:none; color:var(--sage); border-radius:999px; padding:6px 13px; font:inherit; font-size:13.5px; cursor:pointer; }
+  .toggle button.on { background:var(--cream); color:#17211C; font-weight:600; }
+  .paper { background:rgba(10,15,13,.55); border:1px solid var(--line-soft); border-radius:16px; padding:22px; margin-top:16px; overflow:auto; }
+  #aiBox label { color:#D9D3C6 !important; }
+  input[type=checkbox] { accent-color:var(--leaf); width:16px; height:16px; }
 
   /* CV preview, in the same four styles as the Word file */
   .fit { margin:0 auto; }
@@ -109,6 +168,8 @@
   .cv-executive .nm { font-variant:small-caps; color:var(--accent); letter-spacing:.03em; }
   .cv-executive .ttl { font-style:italic; color:var(--accent); }
   .cv-executive h4 { text-align:center; text-transform:uppercase; color:var(--accent); border-top:1px solid var(--accent); border-bottom:1px solid var(--accent); padding:3px 0; }
+  .cv { box-shadow:0 30px 60px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.3); }
+
   /* Any touch screen (phones and tablets): bigger buttons to tap */
   @media (pointer:coarse){
     .btn.small, .tabs button, .toggle button { min-height:44px; }
@@ -117,33 +178,44 @@
     .entry { padding-top:30px; }
   }
   .pinch { display:none; }
-  @media (max-width:640px){ .pinch { display:block; text-align:center; margin-top:6px; } }
+  @media (max-width:640px){ .pinch { display:block; text-align:center; margin-top:8px; } }
   /* Phones */
   @media (max-width:640px){
-    header { padding:18px 14px 2px; } header p { font-size:15px; }
-    main { padding:12px 10px 40px; gap:12px; }
-    .card { padding:14px; border-radius:12px; }
+    .bar-top { padding:16px; } .bar-top .hint { display:none; }
+    header { padding:26px 16px 20px; } header p { font-size:16px; }
+    main { padding:8px 10px 40px; gap:12px; }
+    .card { padding:16px; border-radius:16px; }
+    .card h2 { font-size:26px; }
     .row > * { flex-basis:100%; }
     input[type=text], textarea { font-size:16px; }   /* stops iPhones zooming in */
     .actions { grid-template-columns:1fr; }
-    .btn { padding:13px 16px; } .btn.small { padding:10px 14px; font-size:14px; }
-    .tabs button { flex:1; padding:11px 8px; }
+    .btn { padding:14px 18px; } .btn.small { padding:10px 14px; font-size:14px; }
+    .tabs { width:100%; } .tabs button { flex:1; padding:11px 6px; }
     .toggle button { padding:10px 12px; }
     .sw { width:36px; height:36px; }
-    .swatches { flex-wrap:wrap; }
-    .ring { width:110px; height:110px; } .ring div { width:86px; height:86px; } .ring b { font-size:28px; }
-    .verdict { font-size:19px; }
+    .ring { width:118px; height:118px; } .ring div { width:104px; height:104px; } .ring b { font-size:46px; }
+    .verdict { font-size:28px; }
     .paper { padding:8px; }
     #dl, #useT { flex:1 1 100% !important; }
   }
-  footer { text-align:center; color:var(--soft); font-size:13px; padding:0 20px 30px; }
+  @media (prefers-reduced-motion: reduce){ #tiles, #glow { transition:none !important; } .btn { transition:none; } }
+  footer { max-width:1280px; margin:0 auto; color:var(--sage); font-size:13.5px; padding:10px 24px 40px; line-height:1.7; }
 </style>
 </head>
 <body>
+<div id="field" aria-hidden="true"><canvas id="tiles"></canvas><div id="glow"></div><div id="shade"></div></div>
+<div class="page">
+<div class="bar-top">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="8" fill="none" stroke="#93B96F" stroke-width="1.5"/><path d="M8 11h14M15 11v11" stroke="#F2EBDD" stroke-width="2" stroke-linecap="round"/><path d="M8 21.5c3-1.6 4.5-1.6 7 0s4 1.6 7 0" stroke="#C9663F" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+    Tailor
+  </div>
+  <span class="hint">A CV helper. Nothing you add here is saved.</span>
+</div>
 <header>
-  <span class="tag">CV helper</span>
-  <h1>Tailor your CV to every job, honestly.</h1>
-  <p>Add your CV, paste a job advert, and see how well you match, what you are missing, and a version of your CV aimed at that job. Download it as a Word file.</p>
+  <p class="where"><i></i>Free to use, on any device</p>
+  <h1>Your CV, fitted <span class="second">to the job you want.</span></h1>
+  <p>Add your CV and paste a job advert. See how well you match, what you are missing, and a version of your CV aimed at that job, ready to download as a Word file.</p>
 </header>
 
 <main>
@@ -183,6 +255,7 @@
 </main>
 <footer>Tailor suggests, you decide. Read every line before you send your CV: it must be true.<br>
 Tailor does not save your CV. It is used to work out your results and then forgotten.</footer>
+</div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -307,7 +380,7 @@ function setTab(t, jump) {
 }
 document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 
-function colourFor(score) { return score >= 75 ? 'var(--good)' : score >= 55 ? '#4f8a1f' : score >= 35 ? 'var(--warn)' : 'var(--bad)'; }
+function colourFor(score) { return score >= 75 ? 'var(--good)' : score >= 55 ? '#B5C66A' : score >= 35 ? 'var(--warn)' : 'var(--bad)'; }
 function chips(found, wanted) {
   if (!wanted.length) return '<span class="hint">None listed in the advert.</span>';
   return '<div class="chips">' + wanted.map(s => `<span class="chip ${found.includes(s) ? 'yes' : 'no'}">${found.includes(s) ? '✓' : '✗'} ${esc(s)}</span>`).join('') + '</div>';
@@ -323,7 +396,7 @@ function matchPane(m) {
   const yrs = p.years.wanted ? `<div class="hint">The advert asks for ${p.years.wanted}+ years. Your CV shows about ${p.years.have} years of work in total (all jobs counted).</div>`
                              : `<div class="hint">The advert does not ask for a number of years.</div>`;
   return `<div class="scorebox">
-      <div class="ring" style="background:conic-gradient(${colourFor(m.score)} ${m.score * 3.6}deg,#edf0f3 0)"><div><span><b>${m.score}</b>out of 100</span></div></div>
+      <div class="ring" style="background:conic-gradient(${colourFor(m.score)} ${m.score * 3.6}deg,#283830 0)"><div><span><b>${m.score}</b>out of 100</span></div></div>
       <div><div class="verdict" style="color:${colourFor(m.score)}">${esc(m.verdict)}</div><p>${esc(m.advice)}</p>
       <div class="hint">Tailor works out this score the same way every time, without AI, so you can compare jobs fairly.</div></div></div>
     ${bar('Must have skills', p.must, chips(p.must.found, p.must.wanted))}
@@ -448,10 +521,73 @@ async function download() {
   document.body.appendChild(a); a.click(); a.remove();
 }
 
+/* ---------- the cube field ---------- */
+(function field() {
+  const canvas = $('tiles'), glow = $('glow'), ctx = canvas.getContext('2d');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  function draw() {
+    const dpr = Math.min(1.5, devicePixelRatio || 1);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    seed = 7;
+    ctx.fillStyle = '#0F1613'; ctx.fillRect(0, 0, w, h);
+    const T = w < 700 ? 44 : 60, G = w < 700 ? 6 : 8, step = T + G;
+    for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) {
+      const r = rnd(), lift = r > .94;
+      const l = 11.5 + rnd() * 4 + (lift ? 4 : 0);
+      ctx.fillStyle = `hsl(150 16% ${l}%)`;
+      ctx.fillRect(x, y, T, T);
+      ctx.fillStyle = 'rgba(0,0,0,.38)';                 // shadow side, gives the tile depth
+      ctx.fillRect(x + T - (lift ? 6 : 4), y + 3, lift ? 6 : 4, T - 3);
+      ctx.fillRect(x + 3, y + T - (lift ? 6 : 4), T - 3, lift ? 6 : 4);
+      ctx.fillStyle = 'rgba(242,235,221,.05)';           // light catching the top edge
+      ctx.fillRect(x, y, T, 1.5); ctx.fillRect(x, y, 1.5, T);
+    }
+    // faint circuit lines running along the gaps between tiles
+    ctx.lineWidth = 1;
+    for (let i = 0; i < Math.round(w * h / 60000); i++) {
+      let x = Math.floor(rnd() * w / step) * step - G / 2, y = Math.floor(rnd() * h / step) * step - G / 2;
+      ctx.strokeStyle = 'rgba(147,185,111,.16)'; ctx.beginPath(); ctx.moveTo(x, y);
+      for (let k = 0; k < 4; k++) {
+        if (rnd() > .5) x += step * Math.ceil(rnd() * 3) * (rnd() > .5 ? 1 : -1);
+        else y += step * Math.ceil(rnd() * 3) * (rnd() > .5 ? 1 : -1);
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(147,185,111,.32)'; ctx.strokeRect(x - 3.5, y - 3.5, 7, 7);
+    }
+  }
+  draw();
+  let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(draw, 150); });
+  if (still) return;
+
+  // Tilt towards the mouse, easing in so it feels heavy rather than twitchy.
+  const target = { rx: 0, ry: 0, gx: innerWidth * .22, gy: innerHeight * .3 }, now = { ...target };
+  let running = false;
+  addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const x = e.clientX / innerWidth, y = e.clientY / innerHeight;
+    target.rx = (0.5 - y) * 7; target.ry = (x - 0.5) * 9; target.gx = e.clientX; target.gy = e.clientY;
+    if (!running) { running = true; requestAnimationFrame(tick); }
+  });
+  function tick() {
+    let moving = false;
+    for (const k in now) { const d = target[k] - now[k]; now[k] += d * .07; if (Math.abs(d) > .01) moving = true; }
+    canvas.style.transform = `rotateX(${now.rx}deg) rotateY(${now.ry}deg) scale(1.04)`;
+    glow.style.left = 0; glow.style.top = 0;
+    glow.style.transform = `translate(${now.gx}px, ${now.gy}px)`;
+    if (moving) requestAnimationFrame(tick); else running = false;
+  }
+})();
+
 (async () => {
   S.status = await (await fetch('/api/status')).json();
   $('aiBox').innerHTML = S.status.ai
-    ? `<label style="display:flex;gap:8px;align-items:flex-start;color:var(--ink);font-size:13.5px;margin:0"><input type="checkbox" id="useAI" checked style="margin-top:3px">
+    ? `<label style="display:flex;gap:10px;align-items:flex-start;font-size:13.5px;margin:0"><input type="checkbox" id="useAI" checked style="margin-top:3px">
        <span>Use AI to read and rewrite (Google Gemini, free). This sends your CV and the advert to Google. Untick to keep everything on this computer.</span></label>`
     : `AI is off, so Tailor reorders your CV and lists gaps but does not rewrite your words. Add a free Gemini key to turn on rewriting (see README).`;
   renderForm(); renderPane();
