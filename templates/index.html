@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tailor · CV helper</title>
+<style>
+  :root { --ink:#18212b; --soft:#5d6b78; --line:#e1e5ea; --bg:#f4f2ee; --card:#fff; --brand:#2b4c7e;
+          --good:#1f8a4c; --warn:#c77d00; --bad:#c8372d; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:var(--bg); line-height:1.45; }
+  header { max-width:1280px; margin:0 auto; padding:26px 20px 6px; }
+  .tag { display:inline-block; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--brand);
+         background:#e3eaf5; padding:4px 10px; border-radius:99px; }
+  h1 { font-size:clamp(26px,4vw,40px); margin:10px 0 4px; letter-spacing:-.02em; }
+  header p { color:var(--soft); margin:0; max-width:680px; font-size:16px; }
+  main { max-width:1280px; margin:0 auto; padding:16px 20px 50px; display:grid; grid-template-columns: 470px 1fr; gap:20px; align-items:start; }
+  @media (max-width:980px){ main { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
+  .card h2 { font-size:17px; margin:0 0 10px; }
+  .num { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:50%; background:var(--brand); color:#fff; font-size:13px; margin-right:6px; }
+  .hint { font-size:13px; color:var(--soft); }
+  .drop { border:2px dashed #b8c3cf; border-radius:12px; padding:18px; text-align:center; cursor:pointer; color:var(--soft); }
+  .drop:hover,.drop.over { border-color:var(--brand); background:#f2f6fb; color:var(--brand); }
+  .drop b { display:block; color:var(--ink); }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .row > * { flex:1 1 140px; }
+  label { display:block; font-size:12.5px; color:var(--soft); margin-top:8px; }
+  input[type=text], textarea { width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:14px; margin-top:3px; background:#fff; }
+  textarea { resize:vertical; min-height:70px; }
+  #job { min-height:190px; }
+  #form { margin-top:6px; }
+  @media (min-width:981px){ #form { max-height:620px; overflow:auto; padding-right:4px; } }
+  main > div { min-width:0; }   /* stops wide content pushing the page sideways */
+  details { border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-top:8px; }
+  summary { cursor:pointer; font-weight:600; font-size:14px; padding:4px 0; }
+  .entry { border:1px solid var(--line); background:#fafbfc; border-radius:10px; padding:4px 10px 10px; margin-top:10px; position:relative; }
+  .x { position:absolute; right:8px; top:6px; background:none; border:0; color:var(--bad); cursor:pointer; font-size:13px; }
+  .btn { background:var(--brand); color:#fff; border:0; border-radius:9px; padding:11px 16px; font:inherit; font-weight:600; cursor:pointer; }
+  .btn.light { background:#fff; color:var(--ink); border:1px solid var(--line); font-weight:500; }
+  .btn.small { padding:6px 10px; font-size:13px; font-weight:500; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .note { background:#fff6df; border:1px solid #efd58c; border-radius:10px; padding:9px 12px; font-size:13.5px; margin:10px 0; }
+  .note.err { background:#fdecea; border-color:#f2b8b2; }
+  .tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .tabs button { background:#fff; border:1px solid var(--line); border-radius:99px; padding:8px 16px; font:inherit; font-size:14px; cursor:pointer; }
+  .tabs button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .empty { text-align:center; color:var(--soft); padding:50px 10px; }
+  .empty b { display:block; color:var(--ink); font-size:17px; margin-bottom:4px; }
+  .scorebox { display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+  .ring { width:130px; height:130px; border-radius:50%; display:grid; place-items:center; flex:none; }
+  .ring div { width:100px; height:100px; border-radius:50%; background:#fff; display:grid; place-items:center; text-align:center; }
+  .ring b { font-size:32px; display:block; line-height:1; } .ring span { font-size:12px; color:var(--soft); }
+  .verdict { font-size:22px; font-weight:700; }
+  .bar { margin:12px 0; }
+  .bar .top { display:flex; justify-content:space-between; font-size:14px; }
+  .bar .track { height:9px; background:#edf0f3; border-radius:9px; overflow:hidden; margin-top:4px; }
+  .bar .fill { height:100%; background:var(--brand); border-radius:9px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .chip { font-size:12.5px; padding:3px 9px; border-radius:99px; border:1px solid; }
+  .chip.yes { color:var(--good); border-color:#b5e0c6; background:#eef9f2; }
+  .chip.no { color:var(--bad); border-color:#f1c0bb; background:#fdf1f0; }
+  .chip.maybe { color:var(--warn); border-color:#f1d9a6; background:#fff8e9; }
+  .gap { border-left:4px solid; padding:10px 12px; border-radius:6px; background:#fafafa; margin:8px 0; font-size:14px; }
+  .gap.must { border-color:var(--bad); } .gap.nice { border-color:var(--warn); } .gap.show { border-color:var(--brand); }
+  .gap b { display:block; }
+  h3 { font-size:15px; margin:18px 0 6px; }
+  ul.plain { padding-left:18px; margin:6px 0; font-size:14px; } ul.plain li { margin:4px 0; }
+  .styles { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  @media (max-width:640px){ .styles { grid-template-columns:repeat(2,1fr); } }
+  .style { border:2px solid var(--line); border-radius:10px; padding:9px; cursor:pointer; background:#fff; text-align:left; font:inherit; }
+  .style.on { border-color:var(--brand); background:#f2f6fb; }
+  .style b { display:block; font-size:14px; } .style span { font-size:12px; color:var(--soft); }
+  .swatches { display:flex; gap:8px; margin-top:8px; align-items:center; }
+  .sw { width:26px; height:26px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 1px var(--line); cursor:pointer; }
+  .sw.on { box-shadow:0 0 0 2px var(--ink); }
+  .compare { display:flex; gap:14px; align-items:center; font-size:15px; margin:4px 0 8px; flex-wrap:wrap; }
+  .compare b { font-size:22px; }
+  .toggle { display:inline-flex; border:1px solid var(--line); border-radius:99px; overflow:hidden; }
+  .toggle button { border:0; background:#fff; padding:6px 12px; font:inherit; font-size:13px; cursor:pointer; }
+  .toggle button.on { background:var(--ink); color:#fff; }
+  .paper { background:#e9ecef; border-radius:12px; padding:18px; margin-top:12px; overflow:auto; }
+
+  /* CV preview, in the same four styles as the Word file */
+  .fit { margin:0 auto; }
+  .cv { --accent:#0F6B63; background:#fff; width:760px; margin:0 auto; transform-origin:top left; padding:44px 50px; color:#111;
+        box-shadow:0 2px 10px rgba(0,0,0,.08); font-size:13px; line-height:1.4; }
+  .cv h4 { margin:16px 0 6px; font-size:14px; }
+  .cv .nm { font-size:28px; font-weight:700; margin:0; }
+  .cv .ttl { font-size:15px; margin:2px 0; }
+  .cv .ct { font-size:12px; margin:2px 0 6px; }
+  .cv .ln { display:flex; justify-content:space-between; gap:10px; margin-top:8px; }
+  .cv .ln i { white-space:nowrap; font-size:12px; }
+  .cv ul { margin:3px 0 0; padding-left:20px; } .cv li { margin:1px 0; }
+  .cv .changed { background:#fff3c4; }
+  .cv-classic { font-family:Cambria,Georgia,serif; text-align:left; }
+  .cv-classic .hd { text-align:center; } .cv-classic h4 { text-transform:uppercase; border-bottom:1px solid #000; padding-bottom:2px; }
+  .cv-classic .sk { text-align:center; }
+  .cv-modern { font-family:Calibri,"Segoe UI",Arial,sans-serif; }
+  .cv-modern .nm, .cv-modern .ttl, .cv-modern h4 { color:var(--accent); }
+  .cv-modern .ct { border-bottom:2px solid var(--accent); padding-bottom:8px; }
+  .cv-compact { font-family:Arial,Helvetica,sans-serif; font-size:11.5px; padding:30px 34px; }
+  .cv-compact .nm { font-size:21px; } .cv-compact .ttl { font-size:13px; color:var(--accent); }
+  .cv-compact h4 { text-transform:uppercase; font-size:12.5px; color:var(--accent); border-bottom:1px solid var(--accent); margin:10px 0 4px; }
+  .cv-compact .ln { margin-top:5px; }
+  .cv-executive { font-family:Garamond,"EB Garamond",Georgia,serif; font-size:13.5px; }
+  .cv-executive .hd, .cv-executive .sk { text-align:center; }
+  .cv-executive .nm { font-variant:small-caps; color:var(--accent); letter-spacing:.03em; }
+  .cv-executive .ttl { font-style:italic; color:var(--accent); }
+  .cv-executive h4 { text-align:center; text-transform:uppercase; color:var(--accent); border-top:1px solid var(--accent); border-bottom:1px solid var(--accent); padding:3px 0; }
+  /* Any touch screen (phones and tablets): bigger buttons to tap */
+  @media (pointer:coarse){
+    .btn.small, .tabs button, .toggle button { min-height:44px; }
+    .sw { width:38px; height:38px; }
+    .x { padding:12px 12px; top:0; right:0; font-size:14px; min-height:40px; }
+    .entry { padding-top:30px; }
+  }
+  .pinch { display:none; }
+  @media (max-width:640px){ .pinch { display:block; text-align:center; margin-top:6px; } }
+  /* Phones */
+  @media (max-width:640px){
+    header { padding:18px 14px 2px; } header p { font-size:15px; }
+    main { padding:12px 10px 40px; gap:12px; }
+    .card { padding:14px; border-radius:12px; }
+    .row > * { flex-basis:100%; }
+    input[type=text], textarea { font-size:16px; }   /* stops iPhones zooming in */
+    .actions { grid-template-columns:1fr; }
+    .btn { padding:13px 16px; } .btn.small { padding:10px 14px; font-size:14px; }
+    .tabs button { flex:1; padding:11px 8px; }
+    .toggle button { padding:10px 12px; }
+    .sw { width:36px; height:36px; }
+    .swatches { flex-wrap:wrap; }
+    .ring { width:110px; height:110px; } .ring div { width:86px; height:86px; } .ring b { font-size:28px; }
+    .verdict { font-size:19px; }
+    .paper { padding:8px; }
+    #dl, #useT { flex:1 1 100% !important; }
+  }
+  footer { text-align:center; color:var(--soft); font-size:13px; padding:0 20px 30px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="tag">CV helper</span>
+  <h1>Tailor your CV to every job, honestly.</h1>
+  <p>Add your CV, paste a job advert, and see how well you match, what you are missing, and a version of your CV aimed at that job. Download it as a Word file.</p>
+</header>
+
+<main>
+  <div>
+    <section class="card">
+      <h2><span class="num">1</span>Your CV</h2>
+      <div class="drop" id="drop"><b>Upload your current CV</b>Word (.docx), PDF or text. Click or drag it here.
+        <input type="file" id="file" accept=".docx,.pdf,.txt" hidden></div>
+      <div class="row" style="margin-top:8px">
+        <span class="hint">No CV yet? Fill in the sections below to make one.</span>
+        <button class="btn light small" id="sample" style="flex:0 0 auto">Try a sample</button>
+      </div>
+      <div id="readNote"></div>
+      <div id="form"></div>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">2</span>The job</h2>
+      <label for="job">Paste the full job description</label>
+      <textarea id="job" placeholder="Paste the whole advert, including the requirements and the nice to haves."></textarea>
+      <div id="aiBox" class="hint" style="margin-top:10px"></div>
+      <div class="actions">
+        <button class="btn light" id="checkBtn">Check my match</button>
+        <button class="btn" id="tailorBtn">Tailor my CV</button>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <div class="tabs" id="tabs">
+      <button data-tab="match" class="on">Match</button>
+      <button data-tab="gaps">Gaps</button>
+      <button data-tab="cv">CV and download</button>
+    </div>
+    <section class="card" id="pane"></section>
+  </div>
+</main>
+<footer>Tailor suggests, you decide. Read every line before you send your CV: it must be true.<br>
+Tailor does not save your CV. It is used to work out your results and then forgotten.</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = t => { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; };
+const S = { cv: blank(), match: null, tailored: null, tab: 'match', view: 'tailored',
+            style: 'modern', colour: '', order: 'experience_first', status: null };
+
+function blank() {
+  return { name:'', title:'', email:'', phone:'', location:'', links:[], summary:'', skills:[],
+           experience:[], education:[], projects:[], certifications:[], other:[] };
+}
+async function api(url, data, isForm) {
+  const res = await fetch(url, isForm ? { method:'POST', body:data }
+    : { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify(data) });
+  const r = await res.json();
+  if (!res.ok) throw new Error(r.error || 'Something went wrong.');
+  return r;
+}
+function note(el, text, err) { $(el).innerHTML = text ? `<div class="note ${err ? 'err' : ''}">${esc(text)}</div>` : ''; }
+
+/* ---------- the CV form ---------- */
+const FIELDS = {
+  experience: { title:'Experience', fields:[['role','Job title'],['company','Employer'],['location','Place'],['start','Start'],['end','End (or Present)']],
+                list:['bullets','What you did, one point per line'], blank:{ role:'',company:'',location:'',start:'',end:'',bullets:[] } },
+  education:  { title:'Education', fields:[['degree','Qualification'],['school','School or university'],['location','Place'],['start','Start'],['end','End']],
+                list:['details','Details, one per line (optional)'], blank:{ degree:'',school:'',location:'',start:'',end:'',details:[] } },
+  projects:   { title:'Projects', fields:[['name','Project name'],['tech','Tools used'],['date','Year or dates']],
+                list:['bullets','What you did, one point per line'], blank:{ name:'',tech:'',date:'',bullets:[] } },
+  other:      { title:'Other sections', fields:[['heading','Heading, for example Languages or Volunteering']],
+                list:['items','One item per line'], blank:{ heading:'',items:[] } },
+};
+
+function input(path, label, value, area) {
+  return `<label>${label}${area
+    ? `<textarea data-path="${path}" rows="${Math.max(2, String(value||'').split('\n').length + 1)}">${esc(value)}</textarea>`
+    : `<input type="text" data-path="${path}" value="${esc(value)}">`}</label>`;
+}
+function renderForm() {
+  const c = S.cv;
+  let h = `<details open><summary>Contact details</summary>
+    <div class="row">${input('name','Full name',c.name)}${input('title','Headline, for example Junior Cloud Engineer',c.title)}</div>
+    <div class="row">${input('email','Email',c.email)}${input('phone','Phone',c.phone)}</div>
+    <div class="row">${input('location','Town or city',c.location)}${input('links','Links, one per line',c.links.join('\n'),true)}</div></details>
+    <details open><summary>Profile</summary>${input('summary','Two or three sentences about you',c.summary,true)}</details>
+    <details open><summary>Skills</summary>${input('skills','One skill per line. Groups work too, for example "Cloud: EC2, S3, Lambda"',c.skills.join('\n'),true)}</details>`;
+  for (const [key, def] of Object.entries(FIELDS)) {
+    h += `<details ${c[key].length || key === 'experience' ? 'open' : ''}><summary>${def.title} (${c[key].length})</summary>`;
+    c[key].forEach((e, i) => {
+      h += `<div class="entry"><button class="x" data-del="${key}.${i}">Remove</button>`;
+      h += `<div class="row">${def.fields.map(([f, l]) => input(`${key}.${i}.${f}`, l, e[f])).join('')}</div>`;
+      h += input(`${key}.${i}.${def.list[0]}`, def.list[1], (e[def.list[0]] || []).join('\n'), true) + '</div>';
+    });
+    h += `<button class="btn light small" style="margin-top:8px" data-add="${key}">Add ${def.title.toLowerCase().replace(/s$/,'').replace(' section','')}</button></details>`;
+  }
+  h += `<details ${c.certifications.length ? 'open' : ''}><summary>Certifications</summary>${input('certifications','One per line',c.certifications.join('\n'),true)}</details>`;
+  $('form').innerHTML = h;
+}
+$('form').addEventListener('input', e => {
+  const p = e.target.dataset.path; if (!p) return;
+  const parts = p.split('.'), v = e.target.value;
+  const listy = ['links','certifications','bullets','details','items'];
+  let val = parts[parts.length - 1] === 'skills'
+          // one per line; a line with no label and several commas is split into separate skills
+          ? v.split('\n').flatMap(l => /^[^:]{1,40}:/.test(l) ? [l] : l.split(/,(?![^()]*\))/)).map(s => s.trim()).filter(Boolean)
+          : listy.includes(parts[parts.length - 1]) ? v.split('\n').map(s => s.trim()).filter(Boolean) : v;
+  let o = S.cv; for (let i = 0; i < parts.length - 1; i++) o = o[isNaN(parts[i]) ? parts[i] : +parts[i]];
+  o[parts[parts.length - 1]] = val;
+  if (S.tab === 'cv' && S.view === 'mine') renderPane();
+});
+$('form').addEventListener('click', e => {
+  const add = e.target.dataset.add, del = e.target.dataset.del;
+  if (add) { S.cv[add].push(JSON.parse(JSON.stringify(FIELDS[add].blank))); renderForm(); }
+  if (del) { const [k, i] = del.split('.'); S.cv[k].splice(+i, 1); renderForm(); }
+});
+
+/* ---------- loading a CV ---------- */
+async function readFile(f) {
+  if (!f) return;
+  const fd = new FormData(); fd.append('file', f); fd.append('use_ai', useAI() ? '1' : '0');
+  note('readNote', 'Reading your CV...');
+  try {
+    const r = await api('/api/read', fd, true);
+    S.cv = r.cv; S.tailored = null; S.match = null; renderForm();
+    note('readNote', r.used_ai ? 'Read with AI. Have a quick look below to check every section.' : r.note);
+    renderPane();
+  } catch (err) { note('readNote', err.message, true); }
+}
+$('drop').onclick = () => $('file').click();
+$('file').onchange = e => readFile(e.target.files[0]);
+['dragover','dragenter'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.add('over'); }));
+['dragleave','drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.remove('over'); }));
+$('drop').addEventListener('drop', e => readFile(e.dataTransfer.files[0]));
+$('sample').onclick = async () => {
+  const r = await (await fetch('/api/sample')).json();
+  S.cv = r.cv; $('job').value = r.job; S.tailored = null; S.match = null;
+  renderForm(); note('readNote', 'Sample loaded. This is a made up person and job, so you can try every button.'); renderPane();
+};
+
+/* ---------- match and tailor ---------- */
+const useAI = () => S.status && S.status.ai && $('useAI') && $('useAI').checked;
+
+async function busy(btn, text, fn) {
+  const old = btn.textContent; btn.disabled = true; btn.textContent = text;
+  try { await fn(); } catch (err) { S.error = err.message; renderPane(); }
+  btn.disabled = false; btn.textContent = old;
+}
+$('checkBtn').onclick = () => busy($('checkBtn'), 'Checking...', async () => {
+  S.error = ''; S.match = await api('/api/match', { cv:S.cv, job:$('job').value }); setTab('match', true);
+});
+$('tailorBtn').onclick = () => busy($('tailorBtn'), useAI() ? 'Tailoring with AI...' : 'Tailoring...', async () => {
+  S.error = '';
+  S.tailored = await api('/api/tailor', { cv:S.cv, job:$('job').value, use_ai:useAI() });
+  S.match = S.tailored.before; S.view = 'tailored'; setTab('cv', true);
+});
+
+/* ---------- results ---------- */
+function setTab(t, jump) {
+  S.tab = t;
+  if (jump && window.innerWidth <= 980) setTimeout(() => $('tabs').scrollIntoView({ behavior:'smooth' }), 50);
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  renderPane();
+}
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+
+function colourFor(score) { return score >= 75 ? 'var(--good)' : score >= 55 ? '#4f8a1f' : score >= 35 ? 'var(--warn)' : 'var(--bad)'; }
+function chips(found, wanted) {
+  if (!wanted.length) return '<span class="hint">None listed in the advert.</span>';
+  return '<div class="chips">' + wanted.map(s => `<span class="chip ${found.includes(s) ? 'yes' : 'no'}">${found.includes(s) ? '✓' : '✗'} ${esc(s)}</span>`).join('') + '</div>';
+}
+function bar(label, p, extra) {
+  return `<div class="bar"><div class="top"><span>${label}</span><b>${p.points} / ${p.of}</b></div>
+    <div class="track"><div class="fill" style="width:${p.points / p.of * 100}%"></div></div>${extra || ''}</div>`;
+}
+
+function matchPane(m) {
+  if (!m) return `<div class="empty"><b>No match check yet</b>Add your CV and the job, then press Check my match.</div>`;
+  const p = m.parts;
+  const yrs = p.years.wanted ? `<div class="hint">The advert asks for ${p.years.wanted}+ years. Your CV shows about ${p.years.have} years of work in total (all jobs counted).</div>`
+                             : `<div class="hint">The advert does not ask for a number of years.</div>`;
+  return `<div class="scorebox">
+      <div class="ring" style="background:conic-gradient(${colourFor(m.score)} ${m.score * 3.6}deg,#edf0f3 0)"><div><span><b>${m.score}</b>out of 100</span></div></div>
+      <div><div class="verdict" style="color:${colourFor(m.score)}">${esc(m.verdict)}</div><p>${esc(m.advice)}</p>
+      <div class="hint">Tailor works out this score the same way every time, without AI, so you can compare jobs fairly.</div></div></div>
+    ${bar('Must have skills', p.must, chips(p.must.found, p.must.wanted))}
+    ${bar('Nice to have skills', p.nice, chips(p.nice.found, p.nice.wanted))}
+    ${bar('Other words the advert repeats', p.keywords, chips(p.keywords.found, p.keywords.wanted))}
+    ${bar('Years of experience', p.years, yrs)}`;
+}
+
+function gapsPane(m) {
+  if (!m) return `<div class="empty"><b>No gaps found yet</b>Press Check my match or Tailor my CV first.</div>`;
+  const must = m.gaps.filter(g => g.level === 'must'), nice = m.gaps.filter(g => g.level === 'nice');
+  let h = `<p>These are the things the advert asks for that your CV does not show yet. If you have them, add them. If you do not, the tips say what would help.</p>`;
+  h += `<h3>Must have, missing (${must.length})</h3>` + (must.length ? must.map(g => `<div class="gap must"><b>${esc(g.skill)}</b>${esc(g.tip)}</div>`).join('') : '<p class="hint">None. Well done.</p>');
+  h += `<h3>Nice to have, missing (${nice.length})</h3>` + (nice.length ? nice.map(g => `<div class="gap nice"><b>${esc(g.skill)}</b>${esc(g.tip)}</div>`).join('') : '<p class="hint">None.</p>');
+  if (m.unproven.length) h += `<h3>Listed, but not shown in action</h3>` + m.unproven.map(s => `<div class="gap show"><b>${esc(s)}</b>It is in your skills list, but not in any job or project point. Add one line showing when you used it.</div>`).join('');
+  if (m.years_short) h += `<h3>Experience</h3><div class="gap must"><b>Fewer years than they ask for</b>Show what you did with the time you have: results, size of team, things you built. Many employers bend on years for the right person.</div>`;
+  if (m.missing_keywords.length) h += `<h3>Words the advert repeats that your CV does not use</h3><div class="chips">${m.missing_keywords.map(w => `<span class="chip maybe">${esc(w)}</span>`).join('')}</div><p class="hint">Use them only where they truly describe what you did.</p>`;
+  if (S.tailored && S.tailored.advice.length) h += `<h3>More advice${S.tailored.used_ai ? ' from the AI' : ''}</h3><ul class="plain">${S.tailored.advice.map(a => `<li>${esc(a)}</li>`).join('')}</ul>`;
+  return h;
+}
+
+function changedSet() {
+  // Lines in the tailored CV that are new or reworded, so the preview can highlight them.
+  const t = new Set(); if (!S.tailored || !S.tailored.used_ai) return t;
+  const mine = JSON.stringify(S.cv);
+  const all = [S.tailored.cv.summary, ...S.tailored.cv.experience.flatMap(e => e.bullets), ...S.tailored.cv.projects.flatMap(p => p.bullets)];
+  all.forEach(x => { if (x && !mine.includes(JSON.stringify(x).slice(1, -1))) t.add(x); });
+  return t;
+}
+function cvHTML(c, style, colour, order, changed) {
+  const hl = x => changed.has(x) ? ` class="changed"` : '';
+  const dates = (a, b) => a && b ? `${a} to ${b}` : (a || b || '');
+  const sec = {
+    summary: () => c.summary ? `<h4>Profile</h4><p${hl(c.summary)} style="margin:0">${esc(c.summary)}</p>` : '',
+    skills: () => {
+      if (!c.skills.length) return '';
+      const grp = s => s.includes(':') && s.split(':')[0].length < 40 && s.length > 30;
+      const plain = c.skills.filter(s => !grp(s)), groups = c.skills.filter(grp);
+      return `<h4>Key skills</h4>${plain.length ? `<div class="sk">${plain.map(esc).join(' &nbsp;•&nbsp; ')}</div>` : ''}`
+        + groups.map(g => { const i = g.indexOf(':'); return `<div style="margin-top:2px"><b>${esc(g.slice(0, i))}:</b>${esc(g.slice(i + 1))}</div>`; }).join('');
+    },
+    experience: () => c.experience.length ? `<h4>Experience</h4>` + c.experience.map(e => `<div class="ln"><span><b>${esc(e.role || e.company)}</b>${e.company && e.role ? ', ' + esc(e.company) : ''}${e.location ? ', ' + esc(e.location) : ''}</span><i>${esc(dates(e.start, e.end))}</i></div><ul>${e.bullets.map(b => `<li${hl(b)}>${esc(b)}</li>`).join('')}</ul>`).join('') : '',
+    projects: () => c.projects.length ? `<h4>Projects</h4>` + c.projects.map(p => `<div class="ln"><span><b>${esc(p.name)}</b></span><i>${esc(p.date || '')}</i></div>${p.tech ? `<div><i>${esc(p.tech)}</i></div>` : ''}<ul>${p.bullets.map(b => `<li${hl(b)}>${esc(b)}</li>`).join('')}</ul>`).join('') : '',
+    education: () => c.education.length ? `<h4>Education</h4>` + c.education.map(e => `<div class="ln"><span><b>${esc(e.degree || e.school)}</b>${e.school && e.degree ? ', ' + esc(e.school) : ''}${e.location ? ', ' + esc(e.location) : ''}</span><i>${esc(dates(e.start, e.end))}</i></div><ul>${e.details.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`).join('') : '',
+    certs: () => c.certifications.length ? `<h4>Certifications</h4><ul>${c.certifications.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '',
+    other: () => c.other.filter(o => o.items.length).map(o => `<h4>${esc(o.heading || 'Other')}</h4><ul>${o.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join(''),
+  };
+  const seq = order === 'education_first' ? ['summary','skills','education','projects','experience','certs','other']
+                                          : ['summary','skills','experience','projects','education','certs','other'];
+  const contact = [c.location, c.phone, c.email, ...c.links].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
+  const acc = colour ? '#' + S.status.colours[colour] : '';
+  return `<div class="cv cv-${style}" ${acc ? `style="--accent:${acc}"` : ''}><div class="hd">
+      <p class="nm">${esc(c.name || 'Your Name')}</p>${c.title ? `<p class="ttl">${esc(c.title)}</p>` : ''}<p class="ct">${contact}</p></div>
+      ${seq.map(k => sec[k]()).join('')}</div>`;
+}
+
+function cvPane() {
+  const t = S.tailored;
+  const showing = t && S.view === 'tailored' ? t.cv : S.cv;
+  let h = '';
+  if (t) {
+    h += `<div class="compare">Match score: <span>before <b style="color:${colourFor(t.before.score)}">${t.before.score}</b></span> → <span>after <b style="color:${colourFor(t.after.score)}">${t.after.score}</b></span>
+      <span class="toggle"><button data-view="tailored" class="${S.view === 'tailored' ? 'on' : ''}">Tailored</button><button data-view="mine" class="${S.view === 'mine' ? 'on' : ''}">My original</button></span></div>`;
+    if (t.note) h += `<div class="note">${esc(t.note)}</div>`;
+    if (!t.used_ai) h += `<p class="hint">Tailored without AI: your words are unchanged, only the order is. See the Gaps tab for what to add. With a free Gemini key, Tailor also rewrites your profile and points using the advert's language.</p>`;
+    if (t.flags.length) h += `<div class="note"><b>Honesty check.</b> These were changed by the AI and need your eye:<ul class="plain">${t.flags.map(f => `<li>${esc(f)}</li>`).join('')}</ul></div>`;
+    if (t.changes.length) h += `<details><summary>What changed (${t.changes.length})</summary><ul class="plain">${t.changes.map(c => `<li><b>${esc(c.section)}:</b> ${esc(c.what)}${c.why ? ` <span class="hint">${esc(c.why)}</span>` : ''}</li>`).join('')}</ul></details>`;
+    if (t.used_ai) h += `<p class="hint">Lines the AI reworded are highlighted in yellow in the preview (not in the Word file).</p>`;
+  } else {
+    h += `<p class="hint">This is your CV as it stands. Pick a style and download it, or paste a job and press Tailor my CV.</p>`;
+  }
+  const st = S.status.styles;
+  h += `<h3>Style</h3><div class="styles">${Object.entries(st).map(([k, v]) => `<button class="style ${S.style === k ? 'on' : ''}" data-style="${k}"><b>${esc(v.label)}</b><span>${esc(v.about)}</span></button>`).join('')}</div>
+    <div class="swatches"><span class="hint">Colour</span>${Object.entries(S.status.colours).map(([k, v]) => `<span class="sw ${S.colour === k ? 'on' : ''}" title="${k}" data-colour="${k}" style="background:#${v}"></span>`).join('')}
+      <span class="hint" style="margin-left:12px">Order</span><span class="toggle"><button data-order="experience_first" class="${S.order === 'experience_first' ? 'on' : ''}">Experience first</button><button data-order="education_first" class="${S.order === 'education_first' ? 'on' : ''}">Education first</button></span></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="dl" style="flex:0 0 auto">Download as Word (.docx)</button>
+      ${t && S.view === 'tailored' ? `<button class="btn light" id="useT" style="flex:0 0 auto">Edit this version in the form</button>` : ''}
+    </div>
+    <div class="pinch hint">This is how the page will look. Pinch to zoom in.</div><div class="paper"><div class="fit">${cvHTML(showing, S.style, S.colour, S.order, S.view === 'tailored' ? changedSet() : new Set())}</div></div>`;
+  return h;
+}
+
+function renderPane() {
+  if (!S.status) return;
+  let h = S.error ? `<div class="note err">${esc(S.error)}</div>` : '';
+  if (S.tab === 'match') h += matchPane(S.match);
+  if (S.tab === 'gaps') h += gapsPane(S.match);
+  if (S.tab === 'cv') h += cvPane();
+  $('pane').innerHTML = h;
+  $('pane').querySelectorAll('[data-style]').forEach(b => b.onclick = () => { S.style = b.dataset.style; renderPane(); });
+  $('pane').querySelectorAll('[data-colour]').forEach(b => b.onclick = () => { S.colour = b.dataset.colour; renderPane(); });
+  $('pane').querySelectorAll('[data-order]').forEach(b => b.onclick = () => { S.order = b.dataset.order; renderPane(); });
+  $('pane').querySelectorAll('[data-view]').forEach(b => b.onclick = () => { S.view = b.dataset.view; renderPane(); });
+  if ($('dl')) $('dl').onclick = download;
+  fitPreview();
+  if ($('useT')) $('useT').onclick = () => {
+    S.cv = JSON.parse(JSON.stringify(S.tailored.cv)); S.tailored = null; renderForm(); renderPane();
+    note('readNote', 'The tailored version is now in the form. Edit anything you like, then download it from the CV and download tab.');
+  };
+}
+
+// Shrinks the CV preview to fit narrow screens, so it looks like the real page.
+function fitPreview() {
+  const fit = document.querySelector('.fit'), cv = document.querySelector('.cv');
+  if (!fit || !cv) return;
+  const room = fit.parentElement.clientWidth - 2 * parseFloat(getComputedStyle(fit.parentElement).paddingLeft);
+  const scale = Math.min(1, room / 760);
+  cv.style.transform = scale < 1 ? `scale(${scale})` : '';
+  fit.style.width = 760 * scale + 'px';
+  fit.style.height = cv.offsetHeight * scale + 'px';
+}
+window.addEventListener('resize', fitPreview);
+
+async function download() {
+  const cv = S.tailored && S.view === 'tailored' ? S.tailored.cv : S.cv;
+  const res = await fetch('/api/download', { method:'POST', headers:{ 'content-type':'application/json' },
+    body:JSON.stringify({ cv, style:S.style, colour:S.colour, order:S.order }) });
+  const blob = await res.blob();
+  const name = (res.headers.get('content-disposition') || '').match(/filename="(.+)"/);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name ? name[1] : 'CV.docx';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+(async () => {
+  S.status = await (await fetch('/api/status')).json();
+  $('aiBox').innerHTML = S.status.ai
+    ? `<label style="display:flex;gap:8px;align-items:flex-start;color:var(--ink);font-size:13.5px;margin:0"><input type="checkbox" id="useAI" checked style="margin-top:3px">
+       <span>Use AI to read and rewrite (Google Gemini, free). This sends your CV and the advert to Google. Untick to keep everything on this computer.</span></label>`
+    : `AI is off, so Tailor reorders your CV and lists gaps but does not rewrite your words. Add a free Gemini key to turn on rewriting (see README).`;
+  renderForm(); renderPane();
+})();
+</script>
+</body>
+</html>

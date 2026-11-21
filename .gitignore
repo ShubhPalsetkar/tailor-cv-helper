@@ -1,0 +1,10 @@
+# Secrets and local settings: never upload these
+.env
+
+# Local set up and build output
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec

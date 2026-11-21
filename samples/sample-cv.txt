@@ -1,0 +1,35 @@
+Sam Rivers
+Junior Cloud Engineer
+Manchester, UK | sam.rivers@example.com | 07700 900123 | linkedin.com/in/samrivers-example
+
+PROFILE
+Hard working graduate with a passion for cloud computing. Three years of team leadership in retail and a year building cloud projects on AWS. Looking for a first role in cloud or DevOps.
+
+KEY SKILLS
+AWS (EC2, S3, Lambda), Python, Linux, Git, Docker, Customer service, Team leadership, Excel
+
+EXPERIENCE
+Shift Supervisor | Greenway Foods | Manchester | Mar 2022 - Present
+• Lead a team of 12 on evening shifts, planning rotas and breaks
+• Cut stock waste by 15% by changing how we check dates on chilled food
+• Trained 8 new starters on tills, health and safety and stock control
+• Wrote a Python script to turn the weekly sales export into a simple report
+
+Customer Assistant | Greenway Foods | Manchester | Sep 2020 - Feb 2022
+• Served customers on tills and the shop floor
+• Kept shelves filled and faced up during busy periods
+
+PROJECTS
+Serverless photo gallery | AWS Lambda, S3, API Gateway
+• Built a photo upload site that resizes images with Lambda and stores them in S3
+• Set up alarms in CloudWatch to email me when errors go above a limit
+
+Home lab
+• Run a small Linux server with Docker containers for a media server and a wiki
+
+EDUCATION
+BSc Computer Science | University of Salford | 2017 - 2020
+• Dissertation on web application security
+
+CERTIFICATIONS
+AWS Certified Cloud Practitioner (2024)

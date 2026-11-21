@@ -1,0 +1,28 @@
+Junior DevOps Engineer
+Northwind Digital, Manchester (hybrid)
+
+About the role
+You will join a friendly platform team that looks after the cloud systems behind our online shops. You will help keep things running, automate the boring parts and learn from experienced engineers.
+
+What you'll do
+- Look after our AWS accounts and help build new services
+- Write and improve CI/CD pipelines in GitHub Actions
+- Help manage infrastructure with Terraform
+- Monitor systems and help fix problems when they happen
+- Write clear documentation for the team
+
+Essential
+- 1+ years of experience in a technical or IT role
+- Some hands on experience with AWS
+- Linux and Bash scripting
+- Python or another scripting language
+- Git and version control
+- Good communication and teamwork
+
+Nice to have
+- Docker and Kubernetes
+- Terraform or other Infrastructure as Code
+- Experience with monitoring tools such as Prometheus or Grafana
+- An AWS certification
+
+We offer hybrid working, 25 days holiday, training budget and a pension.
